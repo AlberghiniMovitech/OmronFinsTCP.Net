@@ -6,12 +6,14 @@ namespace OmronFinsTCP.Net
 {
     public class EtherNetPLC
     {
+        BasicClass basicClass;
+
         /// <summary>
         /// PLC节点号，调试方法，一般不需要使用
         /// </summary>
         public string PLCNode
         {
-            get { return BasicClass.plcNode.ToString(); }
+            get { return basicClass.plcNode.ToString(); }
         }
 
         /// <summary>
@@ -19,7 +21,7 @@ namespace OmronFinsTCP.Net
         /// </summary>
         public string PCNode
         {
-            get { return BasicClass.pcNode.ToString(); }
+            get { return basicClass.pcNode.ToString(); }
         }
 
         /// <summary>
@@ -27,7 +29,8 @@ namespace OmronFinsTCP.Net
         /// </summary>
         public EtherNetPLC()
         {
-            BasicClass.Client = new TcpClient();
+            basicClass = new BasicClass();
+            basicClass.Client = new TcpClient();
         }
 
         /// <summary>
@@ -39,13 +42,16 @@ namespace OmronFinsTCP.Net
         /// <returns></returns>
         public short Link(string rIP, short rPort, short timeOut = 3000)
         {
-            if(BasicClass.PingCheck(rIP,timeOut))
+            basicClass.Client.ReceiveTimeout = timeOut;
+            basicClass.Client.SendTimeout = timeOut;
+
+            if (BasicClass.PingCheck(rIP,timeOut))
             {
-                BasicClass.Client.Connect(rIP, (int)rPort);
-                BasicClass.Stream = BasicClass.Client.GetStream();
+                basicClass.Client.Connect(rIP, (int)rPort);
+                basicClass.Stream = basicClass.Client.GetStream();
                 Thread.Sleep(10);
 
-                if (BasicClass.SendData(FinsClass.HandShake()) != 0)
+                if (basicClass.SendData(FinsClass.HandShake()) != 0)
                 {
                     return -1;
                 }
@@ -53,7 +59,7 @@ namespace OmronFinsTCP.Net
                 {
                     //开始读取返回信号
                     byte[] buffer = new byte[24];
-                    if (BasicClass.ReceiveData(buffer) != 0)
+                    if (basicClass.ReceiveData(buffer) != 0)
                     {
                         return -1;
                     }
@@ -63,8 +69,8 @@ namespace OmronFinsTCP.Net
                             return -1;
                         else
                         {
-                            BasicClass.pcNode = buffer[19];
-                            BasicClass.plcNode = buffer[23];
+                            basicClass.pcNode = buffer[19];
+                            basicClass.plcNode = buffer[23];
                             return 0;
                         }
                     }
@@ -85,8 +91,8 @@ namespace OmronFinsTCP.Net
         {
             try
             {
-                BasicClass.Stream.Close();
-                BasicClass.Client.Close();
+                basicClass.Stream.Close();
+                basicClass.Client.Close();
                 return 0;
             }
             catch
@@ -108,10 +114,10 @@ namespace OmronFinsTCP.Net
             reData = new short[(int)(cnt)];//储存读取到的数据
             int num = (int)(30 + cnt * 2);//接收数据(Text)的长度,字节数
             byte[] buffer = new byte[num];//用于接收数据的缓存区大小
-            byte[] array = FinsClass.FinsCmd(RorW.Read, mr, MemoryType.Word, ch, 00, cnt);
-            if (BasicClass.SendData(array) == 0)
+            byte[] array = FinsClass.FinsCmd(RorW.Read, mr, MemoryType.Word, ch, 00, cnt, basicClass);
+            if (basicClass.SendData(array) == 0)
             {
-                if (BasicClass.ReceiveData(buffer) == 0)
+                if (basicClass.ReceiveData(buffer) == 0)
                 {
                     //命令返回成功，继续查询是否有错误码，然后在读取数据
                     bool succeed = true;
@@ -187,7 +193,7 @@ namespace OmronFinsTCP.Net
         public short WriteWords(PlcMemory mr, short ch, short cnt, short[] inData)
         {            
             byte[] buffer = new byte[30];
-            byte[] arrayhead = FinsClass.FinsCmd(RorW.Write, mr, MemoryType.Word, ch, 00, cnt);//前34字节和读指令基本一直，还需要拼接下面的输入数据数组
+            byte[] arrayhead = FinsClass.FinsCmd(RorW.Write, mr, MemoryType.Word, ch, 00, cnt, basicClass);//前34字节和读指令基本一直，还需要拼接下面的输入数据数组
             byte[] wdata = new byte[(int)(cnt * 2)];
             //转换写入值到wdata数组
             for (int i = 0; i < cnt; i++)
@@ -200,9 +206,9 @@ namespace OmronFinsTCP.Net
             byte[] array = new byte[(int)(cnt * 2 + 34)];
             arrayhead.CopyTo(array, 0);
             wdata.CopyTo(array, 34);
-            if (BasicClass.SendData(array) == 0)
+            if (basicClass.SendData(array) == 0)
             {
-                if (BasicClass.ReceiveData(buffer) == 0)
+                if (basicClass.ReceiveData(buffer) == 0)
                 {
                     //命令返回成功，继续查询是否有错误码，然后在读取数据
                     bool succeed = true;
@@ -269,10 +275,10 @@ namespace OmronFinsTCP.Net
             byte[] buffer = new byte[31];//用于接收数据的缓存区大小
             short cnInt = short.Parse(ch.Split('.')[0]);
             short cnBit = short.Parse(ch.Split('.')[1]);
-            byte[] array = FinsClass.FinsCmd(RorW.Read, mr, MemoryType.Bit, cnInt, cnBit, 1);
-            if (BasicClass.SendData(array) == 0)
+            byte[] array = FinsClass.FinsCmd(RorW.Read, mr, MemoryType.Bit, cnInt, cnBit, 1, basicClass);
+            if (basicClass.SendData(array) == 0)
             {
-                if (BasicClass.ReceiveData(buffer) == 0)
+                if (basicClass.ReceiveData(buffer) == 0)
                 {
                     //命令返回成功，继续查询是否有错误码，然后在读取数据
                     bool succeed = true;
@@ -320,13 +326,13 @@ namespace OmronFinsTCP.Net
             byte[] buffer = new byte[30];
             short cnInt = short.Parse(ch.Split('.')[0]);
             short cnBit = short.Parse(ch.Split('.')[1]);
-            byte[] arrayhead = FinsClass.FinsCmd(RorW.Write, mr, MemoryType.Bit, cnInt, cnBit, 1);
+            byte[] arrayhead = FinsClass.FinsCmd(RorW.Write, mr, MemoryType.Bit, cnInt, cnBit, 1, basicClass);
             byte[] array = new byte[35];
             arrayhead.CopyTo(array, 0);
             array[34] = (byte)bs;
-            if (BasicClass.SendData(array) == 0)
+            if (basicClass.SendData(array) == 0)
             {
-                if (BasicClass.ReceiveData(buffer) == 0)
+                if (basicClass.ReceiveData(buffer) == 0)
                 {
                     //命令返回成功，继续查询是否有错误码，然后在读取数据
                     bool succeed = true;
@@ -373,10 +379,10 @@ namespace OmronFinsTCP.Net
             reData = new float();
             int num = (int)(30 + 2 * 2);//接收数据(Text)的长度,字节数
             byte[] buffer = new byte[num];//用于接收数据的缓存区大小
-            byte[] array = FinsClass.FinsCmd(RorW.Read, mr, MemoryType.Word, ch, 00, 2);
-            if (BasicClass.SendData(array) == 0)
+            byte[] array = FinsClass.FinsCmd(RorW.Read, mr, MemoryType.Word, ch, 00, 2, basicClass);
+            if (basicClass.SendData(array) == 0)
             {
-                if (BasicClass.ReceiveData(buffer) == 0)
+                if (basicClass.ReceiveData(buffer) == 0)
                 {
                     //命令返回成功，继续查询是否有错误码，然后在读取数据
                     bool succeed = true;

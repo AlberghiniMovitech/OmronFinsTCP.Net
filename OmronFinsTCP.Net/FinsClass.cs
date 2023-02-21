@@ -100,7 +100,7 @@ namespace OmronFinsTCP.Net
         /// <param name="offset">位地址：00-15,字地址则为00</param>
         /// <param name="cnt">地址个数,按位读写只能是1</param>
         /// <returns></returns>
-        internal static byte[] FinsCmd(RorW rw, PlcMemory mr, MemoryType mt, short ch, short offset, short cnt)
+        internal static byte[] FinsCmd(RorW rw, PlcMemory mr, MemoryType mt, short ch, short offset, short cnt, BasicClass basicClass)
         {
             //byte[] array;
             //if (rw == RorW.Read)
@@ -152,10 +152,10 @@ namespace OmronFinsTCP.Net
             array[18] = 0x02;//GCT, less than 8 network layers
             array[19] = 0x00;//DNA, local network
 
-            array[20] = BasicClass.plcNode;//DA1
+            array[20] = basicClass.plcNode;//DA1
             array[21] = 0x00;//DA2, CPU unit
             array[22] = 0x00;//SNA, local network
-            array[23] = BasicClass.pcNode;//SA1
+            array[23] = basicClass.pcNode;//SA1
 
             array[24] = 0x00;//SA2, CPU unit
             array[25] = 0xFF;

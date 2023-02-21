@@ -9,9 +9,9 @@ namespace OmronFinsTCP.Net
 {
     class BasicClass
     {
-        internal static TcpClient Client;
-        internal static NetworkStream Stream;
-        internal static byte pcNode, plcNode;
+        internal TcpClient Client;
+        internal NetworkStream Stream;
+        internal byte pcNode, plcNode;
 
         //检查PLC链接状况
         internal static bool PingCheck(string ip,int timeOut)
@@ -25,7 +25,7 @@ namespace OmronFinsTCP.Net
         }
 
         //内部方法，发送数据
-        internal static short SendData(byte[] sd)
+        internal short SendData(byte[] sd)
         {
             try
             {
@@ -39,7 +39,7 @@ namespace OmronFinsTCP.Net
         }
 
         //内部方法，接收数据
-        internal static short ReceiveData(byte[] rd)
+        internal short ReceiveData(byte[] rd)
         {
             try
             {
