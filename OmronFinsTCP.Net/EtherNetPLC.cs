@@ -61,13 +61,13 @@ namespace OmronFinsTCP.Net
                     byte[] buffer = new byte[24];
                     if (basicClass.ReceiveData(buffer) != 0)
                     {
-                        return -1;
+                        return -2;
                     }
                     else
                     {
-                        if (buffer[15] != 0)//TODO:这里的15号是不是ERR信息暂时不能完全肯定
-                            return -1;
-                        else
+                        //if (buffer[15] != 0)//TODO:这里的15号是不是ERR信息暂时不能完全肯定
+                        //    return buffer[15];
+                        //else
                         {
                             basicClass.pcNode = buffer[19];
                             basicClass.plcNode = buffer[23];
@@ -79,7 +79,7 @@ namespace OmronFinsTCP.Net
             else
             {
                 //连接超时
-                return -1;
+                return -4;
             }
         }
 
@@ -147,17 +147,17 @@ namespace OmronFinsTCP.Net
                     }
                     else
                     {
-                        return -1;
+                        return -2;
                     }
                 }
                 else
                 {
-                    return -1;
+                    return -3;
                 }
             }
             else
             {
-                return -1;
+                return -4;
             }
         }
 
